@@ -89,5 +89,4 @@ INSERT INTO EMPLOYEE_with_constraints_tmp values (223345, 'Aman', 15000, '2023-0
 
 INSERT INTO EMPLOYEE_with_constraints_tmp values (172151, 'Raj' , 500, '2020-05-20');     -- Error Code: 3819. Check constraint 'salary_check' is violated.
 
-
-
+-- ---------------------------------------------------------------------------------------------------------------------------
