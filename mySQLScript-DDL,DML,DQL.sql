@@ -90,3 +90,150 @@ INSERT INTO EMPLOYEE_with_constraints_tmp values (223345, 'Aman', 15000, '2023-0
 INSERT INTO EMPLOYEE_with_constraints_tmp values (172151, 'Raj' , 500, '2020-05-20');     -- Error Code: 3819. Check constraint 'salary_check' is violated.
 
 -- ---------------------------------------------------------------------------------------------------------------------------
+-- Constraints  ---
+-- ---------------------------------------------------------------------------------------------------------------------------
+CREATE TABLE if not exists emp
+(
+id int,
+name varchar(50),
+address varchar (50),
+city varchar(50)
+);
+
+insert into emp values(1, 'Dilip','KR Pura','Bengaluru');
+
+-- Adding new column DOB
+ALTER TABLE EMP
+ADD DOB DATE;
+
+select * from emp;
+
+-- drop a column
+ALTER TABLE EMP
+DROP COLUMN CITY;
+
+SELECT * FROM EMP;
+
+-- Changing the column name
+ALTER TABLE EMP
+RENAME COLUMN NAME TO FULL_NAME;
+
+SELECT * FROM EMP;
+
+-- Creating new table
+CREATE TABLE if not exists emp_new
+(
+id int,
+name varchar(50),
+age int,
+hiring_date date,
+salary int,
+city varchar(50)
+);
+
+insert into emp_new values (1,'Dilip', 35, '2020-05-20', 20000, 'Bengaluru');
+insert into emp_new values (2,'Aman', 26, '2022-01-02', 12000, 'Pune');
+insert into emp_new values (3,'Satish', 25, '2021-02-15', 30000, 'Hyderabad');
+insert into emp_new values (4,'Ravi', 30, '2020-08-10', 45000, 'Bengaluru');
+
+select * from emp_new;
+
+-- Altering and add constraint
+ALTER TABLE EMP_NEW
+ADD constraint id_unique UNIQUE(ID);
+
+insert into emp_new values (4,'Ravi', 30, '2020-08-10', 45000, 'Bengaluru');  -- Error Code: 1062. Duplicate entry '4' for key 'emp_new.id_unique'
+
+-- Altering and drop constraint
+ALTER TABLE EMP_NEW
+drop constraint id_unique;
+
+-- ---------------------------------------------------------------------------------------------------------------------------
+-- primary and foreign keys  ---
+-- ---------------------------------------------------------------------------------------------------------------------------
+DROP TABLE  if exists guests;
+CREATE TABLE guests
+(
+id int,
+name varchar(50),
+age int,
+constraint pk Primary Key (id)
+);
+
+insert into guests values (1, 'Dilip',32);
+insert into guests values (1, 'Dilip',32);   -- Error Code: 1062. Duplicate entry '1' for key 'guests.PRIMARY'
+insert into guests values (null, 'Dilip',32);-- Error Code: 1048. Column 'id' cannot be null  
+
+select * from guests;
+-- --------------------------------------------------------------
+create table customer
+(
+cust_id int,
+name varchar(50),
+age int,
+constraint pk primary key(cust_id)
+);
+
+create table orders
+(
+order_id int,
+amount int,
+customer_id int, 
+constraint pk primary key(order_id),
+constraint fk foreign key(customer_id) references customer(cust_id)
+);
+
+insert into customer values (1,'Dilip',32),(2,'Aman',26);
+insert into orders values (1001,2000,1),(1002,2500,2);
+
+select * from orders;
+
+insert into orders values (1004,3000,5); -- Error Code: 1452. Cannot add or update a child row: a foreign key constraint fails (`dilip_db`.`orders`, CONSTRAINT `fk` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`cust_id`))
+
+-- Truncate and Drop 
+truncate table guests;   -- Deletes all the data in the table but keeps the schema
+drop table orders;       -- Deletes all the data in the table and delete the table as well
+
+-- -----------------------------------------------------------------------------------------------------
+select * from emp_new;
+
+select count(*) from emp_new;
+select count(1) from emp_new;    -- Returns 4 since 4 entries in the table
+select count(100) from emp_new;  -- Returns 4 since 4 entries in the table
+
+select * from emp_new; 
+
+update emp_new
+set salary = salary * 1.2
+where age < 50;
+
+select * from emp_new; 
+
+update emp_new set salary= 60000 where hiring_date = '2020-08-10';
+select * from emp_new; 
+
+-- AUTO Increment Table --
+create table auto_inc_exmp
+(
+id int auto_increment,
+name varchar(20),
+primary key(id)
+);
+
+insert into auto_inc_exmp(name) values ('Dilip'),('Aman'),('Ravi');  -- INserts id as 1,2,3
+select * from auto_inc_exmp;
+
+insert into auto_inc_exmp values (6,'Satish');  -- inserts entry with id as 6
+insert into auto_inc_exmp(name) values ('Shaman');  -- auto increments from 6 i.e., to 7
+select * from auto_inc_exmp;
+
+-- -----------------------------------------------------
+select * from emp_new limit 2;
+
+select * from emp_new order by salary desc limit 2;
+
+
+
+
+
+
