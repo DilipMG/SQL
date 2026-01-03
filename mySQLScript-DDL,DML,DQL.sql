@@ -90,7 +90,6 @@ INSERT INTO EMPLOYEE_with_constraints_tmp values (223345, 'Aman', 15000, '2023-0
 INSERT INTO EMPLOYEE_with_constraints_tmp values (172151, 'Raj' , 500, '2020-05-20');     -- Error Code: 3819. Check constraint 'salary_check' is violated.
 
 -- ---------------------------------------------------------------------------------------------------------------------------
--- Constraints  ---
 -- ---------------------------------------------------------------------------------------------------------------------------
 CREATE TABLE if not exists emp
 (
@@ -135,6 +134,10 @@ insert into emp_new values (1,'Dilip', 35, '2020-05-20', 20000, 'Bengaluru');
 insert into emp_new values (2,'Aman', 26, '2022-01-02', 12000, 'Pune');
 insert into emp_new values (3,'Satish', 25, '2021-02-15', 30000, 'Hyderabad');
 insert into emp_new values (4,'Ravi', 30, '2020-08-10', 45000, 'Bengaluru');
+insert into emp_new values (5,'Sanjay', 35, '2020-05-20', 28000, 'Bengaluru','India');
+insert into emp_new values (6,'Praveen', 26, '2022-01-02', 12000, 'Pune','India');
+insert into emp_new values (7,'Rakesh', 25, '2021-02-15', 28000, 'Hyderabad','India');
+insert into emp_new values (8,'Alok', 30, '2020-08-10', 43200, 'Bengaluru','India');
 
 select * from emp_new;
 
@@ -193,21 +196,39 @@ insert into orders values (1004,3000,5); -- Error Code: 1452. Cannot add or upda
 -- Truncate and Drop 
 truncate table guests;   -- Deletes all the data in the table but keeps the schema
 drop table orders;       -- Deletes all the data in the table and delete the table as well
-
 -- -----------------------------------------------------------------------------------------------------
 select * from emp_new;
 
+show create table emp_new;
+
+-- modifying the column 'name' 
+alter table emp_new
+modify name varchar(100);
+
+show create table emp_new;
+
+-- adding the new column 'country' 
+alter table emp_new
+add country varchar(30);
+
+-- renaming the coumn name
+alter table emp_new rename column country to emp_country; 
+select * from emp_new;
+
 select count(*) from emp_new;
-select count(1) from emp_new;    -- Returns 4 since 4 entries in the table
-select count(100) from emp_new;  -- Returns 4 since 4 entries in the table
+
+select count(1) from emp_new;    -- Returns 4 since 4 entries in the table. 1 is as same as *, it has no significance. 
+select count(100) from emp_new;  -- Returns 4 since 4 entries in the table. 100 is as same as *, it has no significance. 
 
 select * from emp_new; 
 
+-- updating the columns 'salary' and 'country'
 update emp_new
-set salary = salary * 1.2
+set salary = salary * 1.2, country = 'India'
 where age < 50;
 
 select * from emp_new; 
+
 
 update emp_new set salary= 60000 where hiring_date = '2020-08-10';
 select * from emp_new; 
@@ -220,20 +241,44 @@ name varchar(20),
 primary key(id)
 );
 
+-- column id would be incremented automatically since no data is passed
 insert into auto_inc_exmp(name) values ('Dilip'),('Aman'),('Ravi');  -- INserts id as 1,2,3
 select * from auto_inc_exmp;
+
 
 insert into auto_inc_exmp values (6,'Satish');  -- inserts entry with id as 6
 insert into auto_inc_exmp(name) values ('Shaman');  -- auto increments from 6 i.e., to 7
 select * from auto_inc_exmp;
 
 -- -----------------------------------------------------
-select * from emp_new limit 2;
+select * from emp_new limit 2;   -- select only 2 rows
 
-select * from emp_new order by salary desc limit 2;
+select * from emp_new order by salary desc limit 2;  -- sorts the records on descending order of salary and selects top 2 records.
+-- --------------------------------------------------------
+-- selecting the 'N'th highest salary 
+-- id	name	age	hiring_date	salary	city	emp_country	dense_rank	RANk()	Row_number()
+-- 4	Ravi	30	10-08-2020	72000	Bengaluru	India	   1	     1    	1
+-- 3	Satish	25	15-02-2021	43200	Hyderabad	India	   2       	 2	    2
+-- 8	Alok	30	10-08-2020	43200	Bengaluru	India	   2	     2   	3
+-- 1	Dilip	35	20-05-2020	28800	Bengaluru	India	   3	     4	    4
+-- 5	Sanjay	35	20-05-2020	28000	Bengaluru	India	   3	     4   	5
+-- 7	Rakesh	25	15-02-2021	28000	Hyderabad	India	   3	     4	    6
+-- 2	Aman	26	02-01-2022	17280	Pune	    India	   4	     7	    7
+-- 6	Praveen	26	02-01-2022	12000	Pune	    India	   5	     8	    8
 
+select name, salary from 
+(select *, dense_rank() over (order by salary desc) as salary_rank from emp_new ) as temp  -- nth distinct value (no skips). 'Dilip', '28800'
 
+where temp.salary_rank=3;
 
+select name, salary from 
+(select *, rank() over (order by salary desc) as salary_rank from emp_new ) as temp  -- nth rank (skips numbers if ties). -- null as no 3rd rank
+where temp.salary_rank=3;
 
+select name, salary from 
+(select *, row_number() over (order by salary desc) as salary_rank from emp_new ) as temp -- nth row (ignores ties).   'Alok', '43200'
+where temp.salary_rank=3;
 
-
+select name, salary from emp_new
+order by salary desc
+limit 1 offset 2;     -- positional, simple.  'Alok', '43200'

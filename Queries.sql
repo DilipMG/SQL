@@ -379,7 +379,7 @@ select  emp_name, salary
 from
 (select *, dense_rank() over(order by salary desc) as salary_sorted from salary) as tmp
 where tmp.salary_sorted = 3;
-     
+   
 select * from salary order by salary desc limit 1 offset 2;   -- offset = SKIP
      
 -- Write an SQL query to report the device that is first logged in for each player.     
@@ -453,4 +453,66 @@ SELECT *
 FROM Users
 WHERE REGEXP_LIKE(mail, '^[a-zA-Z][a-zA-Z0-9\_\.\-]*@leetcode.com');       
 
-    
+-- Write an SQL query to report the customer_id and customer_name of customers who have spent at
+-- least $100 in each month of June and July 2020.
+-- Table: Customers
+create table if not exists Customers1
+(
+customer_id int,
+name varchar(50),
+country varchar(50),
+constraint pk PRIMARY KEY (customer_id)
+);
+
+insert into Customers1 VALUES
+(1,'Winston','USA'),(2,'Jonathan','Peru'),(3,'Moustafa','Egypt');
+select * from Customers1;
+
+-- Table: Product
+create table if not exists Product1
+(
+product_id int,
+description varchar(255),
+price int,
+constraint pk PRIMARY KEY (product_id)
+);
+
+insert into Product1 values (10,'LC Phone',300),(20,'LC T-Shirt',10),(30,'LC Book',45),(40,'LC Keychain',2);
+
+-- Table: Orders1
+create table if not exists Orders1
+(
+order_id int,
+customer_id int,
+product_id int,
+order_date DATE,
+quantity int,
+constraint pk PRIMARY KEY (order_id)
+-- constraint fk FOREIGN KEY (customer_id) REFERENCES Customers1(customer_id),
+-- constraint fk1 FOREIGN KEY (product_id) REFERENCES Product1(product_id)
+);
+insert into Orders1 VALUES
+(1,1,10,'2020-06-10',1),(2,1,20,'2020-07-01',1),(3,1,30,'2020-07-08',2),
+(4,2,10,'2020-06-15',2),(5,2,40,'2020-07-01',10),(6,3,20,'2020-06-24',2),
+(7,3,30,'2020-06-25',2),(9,3,30,'2020-05-08',3);
+
+select * from customers1;
+select * from product1;
+select * from Orders1;
+
+select o.customer_id, c.name
+from Customers1 c, Product1 p, Orders1 o
+where c.customer_id = o.customer_id and p.product_id = o.product_id
+group by o.customer_id
+having
+(
+sum(case 
+      when o.order_date like '2020-06%' then o.quantity*p.price
+      else 0 
+	 end) >= 100
+and
+sum(case 
+      when o.order_date like '2020-07%' then o.quantity*p.price
+      else 0 
+	end) >= 100
+);
