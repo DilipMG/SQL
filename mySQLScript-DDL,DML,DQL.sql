@@ -282,3 +282,4 @@ where temp.salary_rank=3;
 select name, salary from emp_new
 order by salary desc
 limit 1 offset 2;     -- positional, simple.  'Alok', '43200'
+-- ----------------------------------------------------

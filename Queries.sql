@@ -516,3 +516,55 @@ sum(case
       else 0 
 	end) >= 100
 );
+
+-- User Defined Functions (UDF) ---------------------------
+-----------------------------------------------------------------------------------
+create table sales_udf
+(sales_id int auto_increment primary key,
+sales_person varchar(50),
+product varchar(50),
+quantity int, 
+price_per_unit decimal(10,2),
+sale_date date
+);
+
+insert into sales_udf(sales_person, product, quantity, price_per_unit, sale_date) values
+  ('Dilip', 'Laptop', 2, 91000.00, '2024-01-03'),
+  ('Aman', 'Samrtphone', 11, 41000.00, '2024-02-19'),
+  ('Dilip', 'Tablet', 10, 1000.00, '2024-03-18'),
+  ('Praveen', 'Laptop', 17, 62000.00, '2024-04-17'),
+  ('Aman', 'Smartphone', 6, 24000.00, '2024-05-11'),
+  ('Satish', 'Tablet', 3, 4000.00, '2024-06-23');
+  
+DROP FUNCTION calculate_total_revenue
+DELIMITER $$
+CREATE FUNCTION calculate_total_revenue(salesperson_name varchar(100))
+RETURNS DECIMAL(10,2)
+READS SQL DATA
+BEGIN
+	DECLARE total_revenue DECIMAL(10,2);
+    
+    SELECT SUM(Quantity * price_per_unit) into total_revenue
+    FROM sales_udf
+    WHERE sales_person = salesperson_name;
+    
+    RETURN ifnull(total_revenue,0);
+END $$
+DELIMITER ; 
+
+select * from sales_udf;
+
+SELECT DISTINCT sales_person, calculate_total_revenue (sales_person) as total_revenue from sales_udf;
+-- --------------------------------------------------------------------------------
+-- ---------   CONCAT   -----------------------------------------------------------
+CREATE TABLE employee_names
+(first_name varchar(20),
+ last_name varchar(20)
+);
+
+insert into employee_names values ('Dilip','MG'),('Aman','Saiful'),('Satish','Teddu');
+
+select *, concat(first_name,' ', last_name) as full_name from employee_names;
+-- ---------------------------------------------------------------
+-- ---------------------------------------------------------------
+
