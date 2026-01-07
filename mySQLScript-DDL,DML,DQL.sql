@@ -245,11 +245,9 @@ primary key(id)
 insert into auto_inc_exmp(name) values ('Dilip'),('Aman'),('Ravi');  -- INserts id as 1,2,3
 select * from auto_inc_exmp;
 
-
 insert into auto_inc_exmp values (6,'Satish');  -- inserts entry with id as 6
 insert into auto_inc_exmp(name) values ('Shaman');  -- auto increments from 6 i.e., to 7
 select * from auto_inc_exmp;
-
 -- -----------------------------------------------------
 select * from emp_new limit 2;   -- select only 2 rows
 
