@@ -264,16 +264,15 @@ select * from emp_new order by salary desc limit 2;  -- sorts the records on des
 -- 2	Aman	26	02-01-2022	17280	Pune	    India	   4	     7	    7
 -- 6	Praveen	26	02-01-2022	12000	Pune	    India	   5	     8	    8
 
-select name, salary from 
+select name, salary,salary_rank from 
 (select *, dense_rank() over (order by salary desc) as salary_rank from emp_new ) as temp  -- nth distinct value (no skips). 'Dilip', '28800'
-
 where temp.salary_rank=3;
 
-select name, salary from 
+select name, salary,salary_rank from 
 (select *, rank() over (order by salary desc) as salary_rank from emp_new ) as temp  -- nth rank (skips numbers if ties). -- null as no 3rd rank
 where temp.salary_rank=3;
 
-select name, salary from 
+select name, salary,salary_rank from 
 (select *, row_number() over (order by salary desc) as salary_rank from emp_new ) as temp -- nth row (ignores ties).   'Alok', '43200'
 where temp.salary_rank=3;
 
