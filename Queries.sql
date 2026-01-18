@@ -801,22 +801,37 @@ GROUP BY COUNTRY
 HAVING country_count = 1;
 
 -- QUERY To print distinct states present in the country
-SELECT country, GROUP_CONCAT(state) AS states_in_country, COUNT(*) AS ORDER_count
-FROM orders_data
-GROUP BY country;
+SELECT 
+    country,
+    GROUP_CONCAT(state) AS states_in_country,
+    COUNT(*) AS ORDER_count
+FROM
+    orders_data
+GROUP BY country
 
-SELECT country, GROUP_CONCAT(state ORDER BY STATE DESC SEPARATOR '-') AS states_in_country, COUNT(*) AS ORDER_count
-FROM orders_data
-GROUP BY country;
+SELECT 
+    country,
+    GROUP_CONCAT(state
+        ORDER BY STATE DESC
+        SEPARATOR '-') AS states_in_country,
+    COUNT(*) AS ORDER_count
+FROM
+    orders_data
+GROUP BY country
 
-SELECT YEAR(HIRING_DATE),COUNT(*) AS TOTAL_HIRING FROM EMP_NEW
-GROUP BY YEAR(HIRING_DATE);
+SELECT 
+    YEAR(HIRING_DATE), COUNT(*) AS TOTAL_HIRING
+FROM
+    EMP_NEW
+GROUP BY YEAR(HIRING_DATE)
  
 
 -- - Group RollUP
-CREATE TABLE payment (payment_amount decimal(8,2), 
-payment_date date, 
-store_id int);
+CREATE TABLE payment (
+    payment_amount DECIMAL(8 , 2 ),
+    payment_date DATE,
+    store_id INT
+)
  
 INSERT INTO payment
 VALUES
@@ -839,109 +854,507 @@ VALUES
 
 -- - Write a query to calculate total reveue of each shop
 -- - per year, also display year wise revenue
-SELECT
-  SUM(payment_amount),
-  YEAR(payment_date) AS 'Payment Year',
-  store_id AS 'Store'
-FROM payment
-GROUP BY YEAR(payment_date), store_id WITH ROLLUP
-ORDER BY YEAR(payment_date), store_id;
+SELECT 
+    SUM(payment_amount),
+    YEAR(payment_date) AS 'Payment Year',
+    store_id AS 'Store'
+FROM
+    payment
+GROUP BY YEAR(payment_date) , store_id WITH ROLLUP
+ORDER BY YEAR(payment_date) , store_id
 
 -- TOTAL REVENUE PER YEAR
-SELECT YEAR(PAYMENT_DATE), SUM(PAYMENT_AMOUNT) 
-FROM PAYMENT
-GROUP BY YEAR(PAYMENT_DATE);
+SELECT 
+    YEAR(PAYMENT_DATE), SUM(PAYMENT_AMOUNT)
+FROM
+    PAYMENT
+GROUP BY YEAR(PAYMENT_DATE)
 
-SELECT * FROM
-(SELECT
-  SUM(payment_amount) AS TOTAL,
-  YEAR(payment_date) AS PAYMENT_YEAR,
-  store_id AS STORE
-FROM payment
-GROUP BY YEAR(payment_date), store_id WITH ROLLUP
-ORDER BY YEAR(payment_date), store_id) TEMP
-WHERE TEMP.STORE IS NULL AND TEMP.PAYMENT_YEAR IS NOT NULL;
+SELECT 
+    *
+FROM
+    (SELECT 
+        SUM(payment_amount) AS TOTAL,
+            YEAR(payment_date) AS PAYMENT_YEAR,
+            store_id AS STORE
+    FROM
+        payment
+    GROUP BY YEAR(payment_date) , store_id WITH ROLLUP
+    ORDER BY YEAR(payment_date) , store_id) TEMP
+WHERE
+    TEMP.STORE IS NULL
+        AND TEMP.PAYMENT_YEAR IS NOT NULL
 
-SELECT * FROM
-(SELECT
-  SUM(payment_amount) AS TOTAL,
-  YEAR(payment_date) AS PAYMENT_YEAR,
-  store_id AS STORE
-FROM payment
-GROUP BY YEAR(payment_date), store_id WITH ROLLUP
-ORDER BY YEAR(payment_date), store_id) TEMP
-WHERE TEMP.STORE IS NOT NULL AND TEMP.PAYMENT_YEAR IS NOT NULL;
+SELECT 
+    *
+FROM
+    (SELECT 
+        SUM(payment_amount) AS TOTAL,
+            YEAR(payment_date) AS PAYMENT_YEAR,
+            store_id AS STORE
+    FROM
+        payment
+    GROUP BY YEAR(payment_date) , store_id WITH ROLLUP
+    ORDER BY YEAR(payment_date) , store_id) TEMP
+WHERE
+    TEMP.STORE IS NOT NULL
+        AND TEMP.PAYMENT_YEAR IS NOT NULL
 
 
 -- Subqueries in SQL
-create table employees
-(
-    id int,
-    name varchar(50),
-    salary int
-);
+CREATE TABLE employees (
+    id INT,
+    name VARCHAR(50),
+    salary INT
+)
 
 insert into employees values(1,'Shashank',5000),(2,'Amit',5500),(3,'Rahul',7000),(4,'Rohit',6000),(5,'Nitin',4000),(6,'Sunny',7500);
 
 -- query to fetch employees getting more salary than 'Rohit';
-select * from employees
-where salary > 
-(select salary from employees
-where name = 'Rohit') ;
+SELECT 
+    *
+FROM
+    employees
+WHERE
+    salary > (SELECT 
+            salary
+        FROM
+            employees
+        WHERE
+            name = 'Rohit')
 
 -- query to select records from Seattle and Goa
 SELECT 
     *
 FROM
     orders_data
-WHERE state IN ('Seattle' , 'Goa');
+WHERE
+    state IN ('Seattle' , 'Goa')
 
-create table customer_order_data
-(
-    order_id int,
-    cust_id int,
-    supplier_id int,
-    cust_country varchar(50)
-);
+CREATE TABLE customer_order_data (
+    order_id INT,
+    cust_id INT,
+    supplier_id INT,
+    cust_country VARCHAR(50)
+)
 
 
 insert into customer_order_data values(101,200,300,'USA'),(102,201,301,'INDIA'),(103,202,302,'USA'),(104,203,303,'UK');
 
-create table supplier_data
-(
-    supplier_id int,
-    sup_country varchar(50)
-);
+CREATE TABLE supplier_data (
+    supplier_id INT,
+    sup_country VARCHAR(50)
+)
 
 insert into supplier_data values(300,'USA'),(303,'UK');
 
-select * from customer_order_data;
+SELECT 
+    *
+FROM
+    customer_order_data
 select * from supplier_data;
 
 -- write a query to find all customer order data where all customers are from same countries 
 -- as the suppliers
-select * from customer_order_data, 
-(select sup_country from supplier_data) as sup
-where cust_country = sup_country;
+SELECT 
+    *
+FROM
+    customer_order_data,
+    (SELECT 
+        sup_country
+    FROM
+        supplier_data) AS sup
+WHERE
+    cust_country = sup_country
 
 
-create table students
-(
-stu_id int,
-marks int
-);
+
+
+CREATE TABLE students (
+    stu_id INT,
+    marks INT
+)
 
 insert into students values (1,90),(2,80),(3,40),(4,76),(5,95),(6,85),(7,65),(8,60);
 
 -- Case for providing the Grades based on the marks
 SELECT 
     *,
-    Case
-      when marks >= 90 then 'A+'
-      when marks>+80 and marks < 90 then 'A'
-      when marks>+70 and marks < 80 then 'B+'
-      when marks>+60 and marks < 70 then 'B'
-      else 'C'
-    End as grade
+    CASE
+        WHEN marks >= 90 THEN 'A+'
+        WHEN marks >= 80 AND marks < 90 THEN 'A'
+        WHEN marks >= 70 AND marks < 80 THEN 'B+'
+        WHEN marks >= 60 AND marks < 70 THEN 'B'
+        ELSE 'C'
+    END AS Grades
 FROM
-    students;
+    students
+
+-- Uber SQL Interview questions
+CREATE TABLE tree (
+    node INT,
+    parent INT
+)
+
+insert into tree values (5,8),(9,8),(4,5),(2,9),(1,5),(3,9),(8,null);
+
+SELECT 
+    *,
+    CASE
+        WHEN parent IS NULL THEN 'Root'
+        WHEN
+            node IN (SELECT DISTINCT
+                    (parent)
+                FROM
+                    tree)
+        THEN
+            'Inner'
+        ELSE 'Leaf'
+    END AS Type
+FROM
+    tree
+
+-- --------------------------------------------------------
+-- --------------------------------------------------------
+-- ---------------- JOINS  --------------------------------
+-- --------------------------------------------------------
+-- --------------------------------------------------------
+CREATE TABLE customers_j (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(50) NOT NULL,
+    city VARCHAR(50)
+)
+
+CREATE TABLE orders_j (
+    order_id INT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    order_date DATE NOT NULL,
+    status ENUM('PLACED', 'SHIPPED', 'CANCELLED') NOT NULL,
+    FOREIGN KEY (customer_id)
+        REFERENCES customers_j (customer_id)
+)
+
+CREATE TABLE products_j (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(80) NOT NULL,
+    category VARCHAR(40),
+    price DECIMAL(10 , 2 ) NOT NULL
+)
+
+CREATE TABLE order_items_j (
+    order_item_id INT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10 , 2 ) NOT NULL,
+    FOREIGN KEY (order_id)
+        REFERENCES orders_j (order_id),
+    FOREIGN KEY (product_id)
+        REFERENCES products_j (product_id)
+)
+
+-- Customers
+INSERT INTO customers_j (customer_id, customer_name, city) VALUES
+(1,'Alice','Mumbai'),
+(2,'Bob','Delhi'),
+(3,'Charlie','Bengaluru'),
+(4,'Diana','Pune');
+
+-- Orders
+INSERT INTO orders_j (order_id, customer_id, order_date, status) VALUES
+(101,1,'2025-08-01','PLACED'),
+(102,1,'2025-08-02','SHIPPED'),
+(103,2,'2025-08-03','PLACED'),
+(104,3,'2025-08-04','CANCELLED');
+
+-- Products
+INSERT INTO products_j (product_id, product_name, category, price) VALUES
+(201,'Smartphone','Electronics',69999.00),
+(202,'Laptop','Electronics',89990.00),
+(203,'Headphones','Audio',3999.00),
+(204,'Wireless Mouse','Accessories',999.00),
+(205,'Mechanical Keyboard','Accessories',4999.00);
+
+-- Order Items
+INSERT INTO order_items_j (order_item_id, order_id, product_id, quantity, unit_price) VALUES
+(1,101,201,1,69999.00),
+(2,101,203,2,3999.00),
+(3,102,202,1,89990.00),
+(4,103,204,3,999.00);
+
+-- Query to show orders with customer names (customers that actually placed orders)
+SELECT 
+    o.order_id, o.order_date, o.status, c.customer_name, c.city
+FROM
+    orders_j o
+        JOIN
+    customers_j c ON o.customer_id = c.customer_id
+WHERE
+    o.status = 'PLACED'
+
+-- Query to show all customers and any orders they placed
+SELECT 
+    *
+FROM
+    customers_j c
+        LEFT JOIN
+    orders_j o ON o.customer_id = c.customer_id
+ORDER BY order_id
+
+-- QUery to find customer who did not place any orders; 
+
+SELECT 
+    c.customer_id, c.customer_name
+FROM
+    customers_j c
+WHERE
+    c.customer_id NOT IN (SELECT DISTINCT
+            (customer_id)
+        FROM
+            orders_j)
+
+-- Query to show all products and any order line that used them (expose never orderd products)
+SELECT 
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.price,
+    o.order_id,
+    o.quantity,
+    o.unit_price
+FROM
+    products_j p
+        LEFT JOIN
+    order_items_j o ON p.product_id = o.product_id
+ORDER BY p.product_id , o.order_id
+
+-- Query to detailed order lines with product names and extended amount. 
+SELECT 
+    o.order_id,
+    o.order_date,
+    o.status,
+    oi.order_item_id,
+    oi.product_id,
+    p.product_name,
+    p.category,
+    oi.quantity,
+    oi.unit_price,
+    (oi.quantity * oi.unit_price) AS extended_price
+FROM
+    orders_j o
+        JOIN
+    order_items_j oi ON o.order_id = oi.order_id
+        JOIN
+    products_j p ON oi.product_id = p.product_id
+ 
+-- Self Join example
+CREATE TABLE employees_full_data (
+    emp_id INT,
+    name VARCHAR(50),
+    mgr_id INT
+)
+
+insert into employees_full_data values(1, 'Shashank', 3);
+insert into employees_full_data values(2, 'Amit', 3);
+insert into employees_full_data values(3, 'Rajesh', 4);
+insert into employees_full_data values(4, 'Ankit', 6);
+insert into employees_full_data values(6, 'Nikhil', null);
+
+SELECT 
+    *
+FROM
+    employees_full_data 
+
+-- Write a query to print the all manager's name  == SELF JOIN
+SELECT DISTINCT
+    manager.emp_id, manager.name
+FROM
+    employees_full_data employee
+        JOIN
+    employees_full_data manager ON employee.mgr_id = manager.emp_id
+
+-- ------------=============================================================
+-- =========================================================================
+CREATE TABLE sales_tb (
+    product_id INTEGER,
+    store_id INTEGER,
+    customer_id INTEGER,
+    promotion_id INTEGER,
+    store_sales DECIMAL(10 , 2 ),
+    store_cost DECIMAL(10 , 2 ),
+    units_sold DECIMAL(10 , 2 ),
+    transaction_date DATE
+)
+
+CREATE TABLE products_tb (
+    product_id INTEGER,
+    product_class_id INTEGER,
+    brand_name VARCHAR(100),
+    product_name VARCHAR(100),
+    is_low_fat_flg TINYINT,
+    is_recyclable_flg TINYINT,
+    gross_weight DECIMAL(10 , 2 ),
+    net_weight DECIMAL(10 , 2 )
+)
+
+CREATE TABLE customers_tb (
+    customer_id INTEGER,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    state VARCHAR(50),
+    birthdate DATE,
+    gender VARCHAR(10)
+)
+
+INSERT INTO products_tb (product_id, product_class_id, brand_name, product_name, is_low_fat_flg, is_recyclable_flg, gross_weight, net_weight) VALUES
+(1, 101, 'Fabulous', 'Product A', 1, 1, 1.0, 0.9),
+(2, 102, 'SuperCool', 'Product B', 1, 1, 1.2, 1.0),
+(3, 103, 'Fabulous', 'Product C', 1, 1, 1.5, 1.3),
+(4, 104, 'MegaBrand', 'Product D', 0, 1, 2.0, 1.8),
+(5, 105, 'Fabulous', 'Product E', 1, 0, 2.5, 2.3),
+(6, 106, 'EcoLife', 'Product F', 0, 1, 0.8, 0.7);
+
+INSERT INTO sales_tb (product_id, store_id, customer_id, promotion_id, store_sales, store_cost, units_sold, transaction_date) VALUES
+(1, 1, 101, 1, 100.00, 50.00, 1, '2024-01-01'),
+(2, 1, 102, 2, 200.00, 80.00, 2, '2024-01-02'),
+(3, 1, 103, 1, 300.00, 120.00, 3, '2024-01-03'),
+(4, 2, 104, 3, 150.00, 60.00, 1, '2024-01-04'),
+(5, 3, 105, 4, 250.00, 100.00, 5, '2024-01-05'),
+(6, 3, 101, 2, 180.00, 70.00, 3, '2024-01-06'),
+(3, 2, 102, 3, 220.00, 90.00, 4, '2024-01-07'),
+(4, 2, 103, 2, 320.00, 150.00, 6, '2024-01-08');
+
+INSERT INTO customers_tb (customer_id, first_name, last_name, state, birthdate, gender) VALUES
+(101, 'John', 'Doe', 'California', '1990-01-01', 'Male'),
+(102, 'Jane', 'Smith', 'Texas', '1985-05-15', 'Female'),
+(103, 'Alice', 'Johnson', 'New York', '1992-07-23', 'Female'),
+(104, 'Bob', 'Brown', 'Florida', '1988-10-10', 'Male'),
+(105, 'Emily', 'Davis', 'Washington', '1995-03-12', 'Female'),
+(106, 'Michael', 'Williams', 'Nevada', '1987-08-30', 'Male'),
+(107, 'Chris', 'Taylor', 'Oregon', '1993-11-17', 'Male'),
+(108, 'Sophia', 'Martinez', 'Arizona', '1990-05-22', 'Female');
+
+-- Q.) Produce a list of all customers' names who have bought anything from the brand "Fabulous"
+SELECT DISTINCT
+    S.CUSTOMER_ID
+FROM
+    SALES_TB S
+        JOIN
+    PRODUCTS_TB P ON P.PRODUCT_ID = S.PRODUCT_ID
+WHERE
+    P.brand_name = 'Fabulous'
+
+-- Q.) Produce a list of all customers' names who have never bought anything from the brand "Fabulous"
+SELECT 
+    C.CUSTOMER_ID, C.FIRST_NAME, C.LAST_NAME
+FROM
+    CUSTOMERS_TB C
+WHERE
+    C.CUSTOMER_ID NOT IN (SELECT DISTINCT
+            S.CUSTOMER_ID
+        FROM
+            SALES_TB S
+                JOIN
+            PRODUCTS_TB P ON P.PRODUCT_ID = S.PRODUCT_ID
+        WHERE
+            P.brand_name = 'Fabulous')
+ 
+-- Any Operation 
+
+CREATE TABLE Students_tb (
+    StudentID INT,
+    StudentName VARCHAR(50)
+)
+
+INSERT INTO Students_tb VALUES 
+(1, 'John'),
+(2, 'Alice'),
+(3, 'Bob');
+
+CREATE TABLE Courses (
+    CourseID INT,
+    CourseName VARCHAR(50)
+)
+
+INSERT INTO Courses VALUES 
+(100, 'Math'),
+(101, 'English'),
+(102, 'Science');
+
+CREATE TABLE Enrollments (
+    StudentID INT,
+    CourseID INT
+)
+
+INSERT INTO Enrollments VALUES 
+(1, 100),
+(1, 101),
+(2, 101),
+(2, 102),
+(3, 100),
+(3, 102);
+
+-- Example: Lets find the students who are enrolled in any course taken by 'John':
+SELECT DISTINCT
+    S1.STUDENTNAME
+FROM
+    STUDENTS_TB S1
+        JOIN
+    ENROLLMENTS E1 ON S1.STUDENTID = E1.STUDENTID
+WHERE
+    S1.STUDENTNAME <> 'JOHN'
+        AND E1.COURSEID = ANY (SELECT 
+            E2.COURSEiD
+        FROM
+            ENROLLMENTS E2
+                JOIN
+            STUDENTS_TB S2 ON S2.STUDENTid = E2.STUDENTID
+        WHERE
+            S2.STUDENTNAME = 'John')
+ 
+SELECT DISTINCT
+    S1.STUDENTNAME
+FROM
+    STUDENTS_TB S1
+        JOIN
+    ENROLLMENTS E1 ON S1.STUDENTID = E1.STUDENTID
+WHERE
+    S1.STUDENTNAME <> 'JOHN'
+        AND E1.COURSEID IN (SELECT 
+            E2.COURSEiD
+        FROM
+            ENROLLMENTS E2
+                JOIN
+            STUDENTS_TB S2 ON S2.STUDENTid = E2.STUDENTID
+        WHERE
+            S2.STUDENTNAME = 'John') 
+
+-- All
+CREATE TABLE Products_v1 (
+    ProductID INT,
+    ProductName VARCHAR(50),
+    Price DECIMAL(5 , 2 )
+);
+
+INSERT INTO Products_v1 VALUES 
+(1, 'Apple', 1.20),
+(2, 'Banana', 0.50),
+(3, 'Cherry', 2.00),
+(4, 'Date', 1.50),
+(5, 'Elderberry', 3.00);
+
+CREATE TABLE Orders_v1 (
+    OrderID INT,
+    ProductID INT,
+    Quantity INT
+);
+
+INSERT INTO Orders_v1 VALUES 
+(1001, 1, 10),
+(1002, 2, 20),
+(1003, 3, 30),
+(1004, 1, 5),
+(1005, 4, 25),
+(1006, 5, 15);
+
+-- Now, suppose we want to find the products that have a price less than the price of all products ordered in order 1001:
