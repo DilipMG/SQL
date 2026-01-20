@@ -1259,7 +1259,9 @@ WHERE
         WHERE
             P.brand_name = 'Fabulous')
  
+-- =========================== 
 -- Any Operation 
+-- =========================== 
 
 CREATE TABLE Students_tb (
     StudentID INT,
@@ -1284,7 +1286,7 @@ INSERT INTO Courses VALUES
 CREATE TABLE Enrollments (
     StudentID INT,
     CourseID INT
-)
+);
 
 INSERT INTO Enrollments VALUES 
 (1, 100),
@@ -1310,7 +1312,7 @@ WHERE
                 JOIN
             STUDENTS_TB S2 ON S2.STUDENTid = E2.STUDENTID
         WHERE
-            S2.STUDENTNAME = 'John')
+            S2.STUDENTNAME = 'John');
  
 SELECT DISTINCT
     S1.STUDENTNAME
@@ -1327,9 +1329,11 @@ WHERE
                 JOIN
             STUDENTS_TB S2 ON S2.STUDENTid = E2.STUDENTID
         WHERE
-            S2.STUDENTNAME = 'John') 
-
+            S2.STUDENTNAME = 'John'); 
+-- =========================== 
 -- All
+-- =========================== 
+
 CREATE TABLE Products_v1 (
     ProductID INT,
     ProductName VARCHAR(50),
@@ -1357,4 +1361,224 @@ INSERT INTO Orders_v1 VALUES
 (1005, 4, 25),
 (1006, 5, 15);
 
--- Now, suppose we want to find the products that have a price less than the price of all products ordered in order 1001:
+-- Now, suppose we want to find the products that have a price less than 
+-- the price of all products ordered in order 1001:
+
+SELECT p.ProductName
+FROM Products_v1 p
+WHERE p.Price < ALL (
+    SELECT pr.Price
+    FROM Products_v1 pr
+    INNER JOIN Orders_v1 o ON pr.ProductID = o.ProductID
+    WHERE o.OrderID = 1001
+);
+
+-- -----------------------
+-- =========================== 
+-- EXISTS Operation
+-- =========================== 
+CREATE TABLE Customers_v2 (
+    CustomerID INT,
+    CustomerName VARCHAR(50)
+);
+
+INSERT INTO Customers_v2 VALUES 
+(1, 'John Doe'),
+(2, 'Alice Smith'),
+(3, 'Bob Johnson'),
+(4, 'Charlie Brown'),
+(5, 'David Williams');
+
+CREATE TABLE Orders_v2 (
+    OrderID INT,
+    CustomerID INT,
+    OrderDate DATE
+);
+
+INSERT INTO Orders_v2 VALUES 
+(1001, 1, '2023-01-01'),
+(1002, 2, '2023-02-01'),
+(1003, 1, '2023-03-01'),
+(1004, 3, '2023-04-01'),
+(1005, 5, '2023-05-01');
+
+-- Example: Lets find the customers who have placed at least one order.
+
+-- - Best for existence check → ✅ Query 1 (EXISTS)
+-- Short circuits, avoids unnecessary aggregation, and is the most efficient pattern
+select c.customerName
+from customers_v2 c 
+where exists (select 1 from orders_v2 o
+where o.customerid = c.customerid);
+
+-- Readable alternative → Query 2 (IN)
+-- Works fine, but may be slower with large datasets.
+select c.customerName
+from customers_v2 c 
+where customerid in (select customerid from orders_v2 o
+where o.customerid = c.customerid);
+
+-- Analytics/reporting → Query 3 (JOIN + GROUP BY)
+-- Only justified if you need order_count
+select customername from customers_v2 c join  
+(select customerid,count(*) as order_count from orders_v2 
+group by customerid) as tmp
+on c.customerid = tmp.customerid
+where tmp.order_count >= 1;
+
+-- NOT EXISTS Operation
+-- Example: Lets find the customers who have not placed any orders.
+SELECT c.CustomerName
+FROM Customers_v2 c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Orders_v2 o
+    WHERE o.CustomerID = c.CustomerID
+);
+
+-- -----=============== FUNCTION 
+
+
+-- Window Functions
+create table shop_sales_data
+(
+sales_date date,
+shop_id varchar(5),
+sales_amount int
+);
+
+insert into shop_sales_data values('2022-02-14','S1',200);
+insert into shop_sales_data values('2022-02-15','S1',300);
+insert into shop_sales_data values('2022-02-14','S2',600);
+insert into shop_sales_data values('2022-02-15','S3',500);
+insert into shop_sales_data values('2022-02-18','S1',400);
+insert into shop_sales_data values('2022-02-17','S2',250);
+insert into shop_sales_data values('2022-02-20','S3',300);
+
+-- Total count of sales for each shop using window function
+-- Working functions - SUM(), MIN(), MAX(), COUNT(), AVG()
+
+-- If we only use Order by In Over Clause, then running sum happens, when two rows have same sales_amount(order by column), adds together
+select *,
+       sum(sales_amount) over(order by sales_amount desc) as sum_of_sales
+from shop_sales_data;
+
+# sales_date, shop_id, sales_amount, sum_of_sales
+-- '2022-02-14', 'S2', '600', '600'
+-- '2022-02-15', 'S3', '500', '1100'
+-- '2022-02-18', 'S1', '400', '1500'
+-- '2022-02-15', 'S1', '300', '2100'
+-- '2022-02-20', 'S3', '300', '2100'
+-- '2022-02-17', 'S2', '250', '2350'
+-- '2022-02-14', 'S1', '200', '2550'
+
+-- If we only use Partition By, within each shop_id, total sum calculated and placed
+select *,
+       sum(sales_amount) over(partition by shop_id) as total_sum_of_sales
+from shop_sales_data;
+
+-- If we only use Partition By & Order By together then running sum happens for each shop_id separately
+select *,
+       sum(sales_amount) over(partition by shop_id order by sales_date) as running_sum_of_sales
+from shop_sales_data;
+
+select *,
+       sum(sales_amount) over(partition by shop_id order by sales_date) 
+       as running_sum_of_sales,
+       avg(sales_amount) over(partition by shop_id order by sales_date) 
+       as running_avg_of_sales,
+       max(sales_amount) over(partition by shop_id order by sales_date) 
+       as running_max_of_sales,
+       min(sales_amount) over(partition by shop_id order by sales_date) 
+       as running_min_of_sales
+from shop_sales_data;
+
+create table amazon_sales_data
+(
+    sales_date date,
+    sales_amount int
+);
+
+insert into amazon_sales_data values('2022-08-21',500);
+insert into amazon_sales_data values('2022-08-22',600);
+insert into amazon_sales_data values('2022-08-19',300);
+insert into amazon_sales_data values('2022-08-18',200);
+insert into amazon_sales_data values('2022-08-25',800);
+
+-- Query - Calculate the date wise rolling average of amazon sales
+select *, 
+       avg(sales_amount) over (order by sales_date) as  rolling_avg
+from amazon_sales_data;
+
+select *,
+       avg(sales_amount) over(order by sales_date) as rolling_avg,
+       sum(sales_amount) over(order by sales_date) as rolling_sum
+from amazon_sales_data;
+
+insert into shop_sales_data values('2022-02-19','S1',400);
+insert into shop_sales_data values('2022-02-20','S1',400);
+insert into shop_sales_data values('2022-02-22','S1',300);
+insert into shop_sales_data values('2022-02-25','S1',200);
+insert into shop_sales_data values('2022-02-15','S2',600);
+insert into shop_sales_data values('2022-02-16','S2',600);
+insert into shop_sales_data values('2022-02-16','S3',500);
+insert into shop_sales_data values('2022-02-18','S3',500);
+insert into shop_sales_data values('2022-02-19','S3',300);
+
+select *, 
+      row_number() over (partition by shop_id order by sales_amount desc) as row_num,
+      rank() over(partition by shop_id order by sales_amount desc) as rank_val,
+	  dense_rank() over(partition by shop_id order by sales_amount desc) as dense_rank_val
+from    shop_sales_data;
+
+	create table employees_r
+	(
+		emp_id int,
+		salary int,
+		dept_name VARCHAR(30)
+	);
+
+	insert into employees_r values(1,10000,'Software');
+	insert into employees_r values(2,11000,'Software');
+	insert into employees_r values(3,11000,'Software');
+	insert into employees_r values(4,11000,'Software');
+	insert into employees_r values(5,15000,'Finance');
+	insert into employees_r values(6,15000,'Finance');
+	insert into employees_r values(7,15000,'IT');
+	insert into employees_r values(8,12000,'HR');
+	insert into employees_r values(9,12000,'HR');
+	insert into employees_r values(10,11000,'HR');
+
+
+	-- get one employee from each department who is getting 
+	-- maximum salary (employee can be random if salary is same)
+select 
+    tmp.*
+from (select *,
+        row_number() over(partition by dept_name order by salary desc) as row_num
+    from employees_r) tmp
+where tmp.row_num = 1;
+
+-- Query - get one employee from each department who is getting maximum salary (employee can be random if salary is same)
+select 
+    tmp.*
+from (select *,
+        row_number() over(partition by dept_name order by salary desc) as row_num
+    from employees_r) tmp
+where tmp.row_num = 1;
+
+-- Query - get all employees from each department who are getting maximum salary
+select 
+    tmp.*
+from (select *,
+        rank() over(partition by dept_name order by salary desc) as rank_num
+    from employees_r) tmp
+where tmp.rank_num = 1;
+
+-- Query - get all top 2 ranked employees from each department who are getting maximum salary
+select 
+    tmp.*
+from (select *,
+        dense_rank() over(partition by dept_name order by salary desc) as dense_rank_num
+    from employees_r) tmp
+where tmp.dense_rank_num <= 2;
