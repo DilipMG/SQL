@@ -1582,3 +1582,96 @@ from (select *,
         dense_rank() over(partition by dept_name order by salary desc) as dense_rank_num
     from employees_r) tmp
 where tmp.dense_rank_num <= 2;
+
+-- LAG() - returns the value of the prev row. SYntax LAG(column, increment step, vaccum default value)
+-- LEAD() - returns the value of the next row.SYntax LEAD(column, increment step, vaccum default value) 
+-- Example for lag and lead
+create table daily_sales
+(
+sales_date date,
+sales_amount int
+);
+
+
+insert into daily_sales values('2022-03-11',400);
+insert into daily_sales values('2022-03-12',500);
+insert into daily_sales values('2022-03-13',300);
+insert into daily_sales values('2022-03-14',600);
+insert into daily_sales values('2022-03-15',500);
+insert into daily_sales values('2022-03-16',200);
+
+select *,
+       LAG(sales_amount,1,0)  over(order by sales_date) as LAG_amt1,
+       LEAD(sales_amount,1,0) over(order by sales_date) as LEAD_amt1,
+       LAG(sales_amount,2,0)  over(order by sales_date) as LAG_amt2,
+       LEAD(sales_amount,2,0) over(order by sales_date) as LEAD_amt2
+from daily_sales;
+
+-- Query - Calculate the differnce of sales with previous day sales
+-- Here null will be derived as no 3rd parameter for lag()
+select sales_date,
+       sales_amount as curr_day_sales,
+       lag(sales_amount, 1) over(order by sales_date) as prev_day_sales,
+       sales_amount - lag(sales_amount, 1) over(order by sales_date) as sales_diff
+from daily_sales;
+
+-- we can use this to replace null with defualt value like 0
+select *,
+  coalesce(lag(sales_amount,1) over(order by sales_date), 0) as prev_sales
+from daily_sales;
+
+-- Here we can replace null with 0 as we are passing 0 as 3rd parameter for lag()
+select sales_date,
+       sales_amount as curr_day_sales,
+       lag(sales_amount, 1, 0) over(order by sales_date) as prev_day_sales,
+       sales_amount - lag(sales_amount, 1, 0) over(order by sales_date) as sales_diff
+from daily_sales;
+
+USE dilip_db;
+
+-- Diff between lead and lag
+select *,
+      lag(sales_amount, 1,0) over(order by sales_date) as pre_day_sales,
+      lead(sales_amount, 1,0) over(order by sales_date) as next_day_sales
+from daily_sales;
+-- rolling or cummulative sum
+select *,
+       sum(sales_amount) over (order by sales_date)  as cumm_sum
+ from daily_sales;
+
+-- sum of sales_amount by keeping 1 row from top and 1 row from bottom under the calc
+select *,
+       sum(sales_amount) over (order by sales_date rows between 1 preceding and 1 following)  as cumm_sum
+ from daily_sales;
+ 
+ -- Finding avg of prev day, current day and next day sales
+select *,
+       avg(sales_amount) over (order by sales_date rows between 1 preceding and 1 following)  as 3_day_avg_sales
+ from daily_sales;
+
+ -- Finding sum since day 1 of the sales till current date
+select *,
+       sum(sales_amount) over (order by sales_date rows between unbounded preceding and current row)  as sales_till_date
+ from daily_sales;
+
+-- sales from current date till last record in the table
+select *,
+       sum(sales_amount) over (order by sales_date rows between  current row and unbounded following)  as sales_till_date
+ from daily_sales;
+
+-- unbounded preceding and unbounded following. providing overall sum for all entries.
+select *,
+       sum(sales_amount) over (order by sales_date rows between  unbounded preceding and unbounded following)  as overall_sum
+ from daily_sales;
+
+
+insert into daily_sales values('2022-03-20',900);
+insert into daily_sales values('2022-03-23',200);
+insert into daily_sales values('2022-03-25',300);
+insert into daily_sales values('2022-03-29',250);
+
+-- Calculate the running sum for a week
+select *,
+       sum(sales_amount) over(order by sales_date range between interval '6' day preceding and current row) as running_weekly_sum
+from daily_sales;
+
