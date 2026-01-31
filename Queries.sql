@@ -1286,7 +1286,7 @@ INSERT INTO Courses VALUES
 CREATE TABLE Enrollments (
     StudentID INT,
     CourseID INT
-);
+)
 
 INSERT INTO Enrollments VALUES 
 (1, 100),
@@ -1312,7 +1312,7 @@ WHERE
                 JOIN
             STUDENTS_TB S2 ON S2.STUDENTid = E2.STUDENTID
         WHERE
-            S2.STUDENTNAME = 'John');
+            S2.STUDENTNAME = 'John')
  
 SELECT DISTINCT
     S1.STUDENTNAME
@@ -1329,7 +1329,7 @@ WHERE
                 JOIN
             STUDENTS_TB S2 ON S2.STUDENTid = E2.STUDENTID
         WHERE
-            S2.STUDENTNAME = 'John'); 
+            S2.STUDENTNAME = 'John')
 -- =========================== 
 -- All
 -- =========================== 
@@ -1338,7 +1338,7 @@ CREATE TABLE Products_v1 (
     ProductID INT,
     ProductName VARCHAR(50),
     Price DECIMAL(5 , 2 )
-);
+)
 
 INSERT INTO Products_v1 VALUES 
 (1, 'Apple', 1.20),
@@ -1351,7 +1351,7 @@ CREATE TABLE Orders_v1 (
     OrderID INT,
     ProductID INT,
     Quantity INT
-);
+)
 
 INSERT INTO Orders_v1 VALUES 
 (1001, 1, 10),
@@ -1364,14 +1364,19 @@ INSERT INTO Orders_v1 VALUES
 -- Now, suppose we want to find the products that have a price less than 
 -- the price of all products ordered in order 1001:
 
-SELECT p.ProductName
-FROM Products_v1 p
-WHERE p.Price < ALL (
-    SELECT pr.Price
-    FROM Products_v1 pr
-    INNER JOIN Orders_v1 o ON pr.ProductID = o.ProductID
-    WHERE o.OrderID = 1001
-);
+SELECT 
+    p.ProductName
+FROM
+    Products_v1 p
+WHERE
+    p.Price < ALL (SELECT 
+            pr.Price
+        FROM
+            Products_v1 pr
+                INNER JOIN
+            Orders_v1 o ON pr.ProductID = o.ProductID
+        WHERE
+            o.OrderID = 1001)
 
 -- -----------------------
 -- =========================== 
@@ -1380,7 +1385,7 @@ WHERE p.Price < ALL (
 CREATE TABLE Customers_v2 (
     CustomerID INT,
     CustomerName VARCHAR(50)
-);
+)
 
 INSERT INTO Customers_v2 VALUES 
 (1, 'John Doe'),
@@ -1393,7 +1398,7 @@ CREATE TABLE Orders_v2 (
     OrderID INT,
     CustomerID INT,
     OrderDate DATE
-);
+)
 
 INSERT INTO Orders_v2 VALUES 
 (1001, 1, '2023-01-01'),
@@ -1404,14 +1409,17 @@ INSERT INTO Orders_v2 VALUES
 
 -- Example: Lets find the customers who have placed at least one order.
 
--- - Best for existence check → ✅ Query 1 (EXISTS)
--- Short circuits, avoids unnecessary aggregation, and is the most efficient pattern
-select c.customerName
-from customers_v2 c 
-where exists (select 1 from orders_v2 o
-where o.customerid = c.customerid);
-
--- Readable alternative → Query 2 (IN)
+SELECT 
+    c.customerName
+FROM
+    customers_v2 c
+WHERE
+    EXISTS( SELECT 
+            1
+        FROM
+            orders_v2 o
+        WHERE
+            o.customerid = c.customerid)Readable alternative → Query 2 (IN)
 -- Works fine, but may be slower with large datasets.
 select c.customerName
 from customers_v2 c 
@@ -1664,6 +1672,10 @@ select *,
        sum(sales_amount) over (order by sales_date rows between  unbounded preceding and unbounded following)  as overall_sum
  from daily_sales;
 
+-- Alternate way to esclude computation of current row
+select *,
+      sum(sales_amount) over(order by sales_date rows between unbounded preceding and unbounded following) - sales_amount as prev_plus_next_sales_sum
+from daily_sales;
 
 insert into daily_sales values('2022-03-20',900);
 insert into daily_sales values('2022-03-23',200);
@@ -1675,3 +1687,124 @@ select *,
        sum(sales_amount) over(order by sales_date range between interval '6' day preceding and current row) as running_weekly_sum
 from daily_sales;
 
+-- How to work with Range Between
+-- sum of sales_amount by keeping all rows from top where abs difference of amount from current row is <=100 and 
+--                        keeping all rows from bottom where abs difference of amount from current row is <=200
+select *,
+      sum(sales_amount) over(order by sales_amount range between 100 preceding and 200 following) as prev_plus_next_sales_sum
+from daily_sales;
+
+-- Common table expression
+
+create table amazon_employees(
+    emp_id int,
+    emp_name varchar(20),
+    dept_id int,
+    salary int
+
+ );
+
+ insert into amazon_employees values(1,'Shashank', 100, 10000);
+ insert into amazon_employees values(2,'Rahul', 100, 20000);
+ insert into amazon_employees values(3,'Amit', 101, 15000);
+ insert into amazon_employees values(4,'Mohit', 101, 17000);
+ insert into amazon_employees values(5,'Nikhil', 102, 30000);
+
+ create table department
+ (
+    dept_id int,
+    dept_name varchar(20) 
+  );
+
+  insert into department values(100, 'Software');
+  insert into department values(101, 'HR');
+  insert into department values(102, 'IT');
+  insert into department values(103, 'Finance');
+
+-- - Write a query to print the name of department along with the total salary paid in each department
+-- - Normal approach
+select d.dept_name, tmp.total_salary
+from (select dept_id , sum(salary) as total_salary from amazon_employees group by dept_id) tmp
+inner join department d on tmp.dept_id = d.dept_id;
+
+-- using WITH Clause.. IMP Note. DO NOT use ';' for WITH Clause temp table. 
+with dept_wise_sal as 
+(select dept_id, sum(salary) as total_salary from amazon_employees group by dept_id)
+
+select d.dept_name, tmp.total_salary
+from dept_wise_sal tmp
+inner join department d on tmp.dept_id = d.dept_id;
+
+-- HAVING MULTIPLE TEMP tables
+-- using WITH Clause.. IMP Note. DO NOT use ';' for WITH Clause temp table. 
+with dept_wise_sal as 
+(select dept_id, sum(salary) as total_salary from amazon_employees group by dept_id),
+     dept_wise_max_sal as 
+(select dept_id, max(salary) as max_salary from amazon_employees group by dept_id)
+
+select d.dept_name, tmp.total_salary, tmpm.max_salary
+from dept_wise_sal tmp
+inner join department d on tmp.dept_id = d.dept_id
+inner join dept_wise_max_sal tmpm on tmp.dept_id = tmpm.dept_id;
+
+-- RECURRSIVE
+WITH recursive gen_num as 
+(select 1 as num
+union 
+select num+1 from gen_num where num<10)
+
+select * from gen_num;
+
+create table emp_mgr
+(
+id int,
+name varchar(50),
+manager_id int,
+designation varchar(50),
+primary key (id)
+);
+
+
+insert into emp_mgr values(1,'Shripath',null,'CEO');
+insert into emp_mgr values(2,'Satya',5,'SDE');
+insert into emp_mgr values(3,'Jia',5,'DA');
+insert into emp_mgr values(4,'David',5,'DS');
+insert into emp_mgr values(5,'Michael',7,'Manager');
+insert into emp_mgr values(6,'Arvind',7,'Architect');
+insert into emp_mgr values(7,'Asha',1,'CTO');
+insert into emp_mgr values(8,'Maryam',1,'Manager');
+
+
+select * from emp_mgr;
+--- for our CTO 'Asha', present her org chart
+
+with recursive emp_hir as  
+(
+   select id, name, manager_id, designation from emp_mgr where name='Asha'
+   UNION
+   select em.id, em.name, em.manager_id, em.designation from emp_hir eh inner join emp_mgr em on eh.id = em.manager_id
+)
+select * from emp_hir;
+
+-- Print level of employees as well
+with recursive emp_hir as  
+(
+   select id, name, manager_id, designation, 1 as lvl from emp_mgr where name='Asha'
+   UNION
+   select em.id, em.name, em.manager_id, em.designation, eh.lvl + 1 as lvl from emp_hir eh inner join emp_mgr em on eh.id = em.manager_id
+)
+
+select * from emp_hir;
+select * from amazon_employees;
+-- - Create views in SQL
+create view employee_data_for_finance as select emp_id, emp_name,salary from amazon_employees;
+select * from employee_data_for_finance;
+
+-- Create logic for department wise salary sum
+create view department_wise_salary as select dept_id, sum(salary) from amazon_employees group by dept_id;
+select * from department_wise_salary;
+
+create view department_wise_salary as select dept_name, sum(salary) as total_salary from employees group by dept_name;
+
+--- Creat indexing
+CREATE INDEX idx_order_id ON orders(order_id);
