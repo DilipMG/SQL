@@ -1806,5 +1806,6 @@ select * from department_wise_salary;
 
 create view department_wise_salary as select dept_name, sum(salary) as total_salary from employees group by dept_name;
 
---- Creat indexing
-CREATE INDEX idx_order_id ON orders(order_id);
+-- - Creat indexing
+CREATE INDEX idx_order_id ON orders1(order_id);
+
